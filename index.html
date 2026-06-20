@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NexusBank</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --black:#000000;
+  --bg:#080808;
+  --bg2:#101010;
+  --bg3:#161616;
+  --bg4:#1e1e1e;
+  --bg5:#242424;
+  --border:#252525;
+  --border2:#2e2e2e;
+  --blue:#2563eb;
+  --blue-bright:#3b82f6;
+  --blue-glow:#1d4ed8;
+  --blue-dim:#1e3a8a;
+  --blue-subtle:rgba(37,99,235,.12);
+  --blue-subtle2:rgba(37,99,235,.06);
+  --accent:#60a5fa;
+  --accent2:#93c5fd;
+  --white:#ffffff;
+  --gray:#a0a0a0;
+  --gray2:#6b6b6b;
+  --gray3:#3a3a3a;
+  --green:#22c55e;
+  --green-dim:rgba(34,197,94,.12);
+  --red:#ef4444;
+  --red-dim:rgba(239,68,68,.12);
+  --shadow-blue:0 0 0 1px rgba(37,99,235,.3),0 8px 32px rgba(37,99,235,.2);
+  --shadow-card:0 1px 0 0 rgba(255,255,255,.03),0 4px 24px rgba(0,0,0,.5);
+  --shadow-lg:0 8px 48px rgba(0,0,0,.7);
+  --r4:4px;--r8:8px;--r12:12px;--r16:16px;--r20:20px;--r24:24px;--r99:99px;
+}
+html{font-size:16px}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--white);min-height:100vh;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:99px}
+.hidden{display:none!important}
+
+/* ── LOADING ── */
+#loading-screen{position:fixed;inset:0;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;z-index:999}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+.load-ring{width:40px;height:40px;border:2px solid var(--bg5);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+
+/* ── AUTH ── */
+#auth-screen{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;background:var(--black)}
+@media(max-width:860px){#auth-screen{grid-template-columns:1fr}#auth-hero{display:none}}
+#auth-hero{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:52px;background:var(--black)}
+.hero-noise{position:absolute;inset:0;background-image:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(37,99,235,.3) 0%,transparent 70%);pointer-events:none}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(37,99,235,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+.hero-z{position:relative;z-index:1}
+.hero-h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.8rem,3vw,2.8rem);font-weight:700;line-height:1.2;color:var(--white);margin-bottom:14px}
+.hero-h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue-bright),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-p{font-size:.9rem;color:var(--gray);line-height:1.65;max-width:320px}
+.hero-stats{display:flex;gap:0}
+.hero-stat{flex:1;padding:20px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r12)}
+.hero-stat+.hero-stat{margin-left:-1px;border-radius:0}
+.hero-stat:first-child{border-radius:var(--r12) 0 0 var(--r12)}
+.hero-stat:last-child{border-radius:0 var(--r12) var(--r12) 0)}
+.stat-val{font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:700;color:var(--white)}
+.stat-lbl{font-size:.72rem;color:var(--gray2);margin-top:3px;letter-spacing:.04em;text-transform:uppercase}
+
+#auth-panel{background:var(--bg);display:flex;align-items:center;justify-content:center;padding:40px 24px;border-left:1px solid var(--border)}
+.auth-card{width:100%;max-width:400px}
+.auth-greeting{font-size:.85rem;color:var(--gray2);margin-bottom:28px;letter-spacing:.01em}
+.auth-greeting strong{color:var(--accent)}
+.auth-tabs{display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r8);padding:3px;margin-bottom:28px;gap:3px}
+.auth-tab{flex:1;padding:9px;border:none;border-radius:calc(var(--r8) - 2px);font-family:'Inter',sans-serif;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .2s;background:transparent;color:var(--gray2);letter-spacing:.01em}
+.auth-tab.active{background:var(--blue);color:var(--white);box-shadow:0 2px 12px rgba(37,99,235,.4)}
+
+/* ── FORM ── */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.72rem;font-weight:600;color:var(--gray2);margin-bottom:7px;letter-spacing:.08em;text-transform:uppercase}
+.field input{width:100%;padding:12px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r8);color:var(--white);font-family:'Inter',sans-serif;font-size:.9rem;outline:none;transition:border-color .15s,box-shadow .15s}
+.field input::placeholder{color:var(--gray3)}
+.field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border:none;border-radius:var(--r8);font-family:'Inter',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.01em}
+.btn-primary{width:100%;background:var(--blue);color:var(--white);box-shadow:0 4px 20px rgba(37,99,235,.35)}
+.btn-primary:hover{background:var(--blue-bright);box-shadow:0 6px 28px rgba(37,99,235,.5);transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0);box-shadow:0 2px 12px rgba(37,99,235,.3)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-secondary{background:var(--bg4);color:var(--gray);border:1px solid var(--border2)}
+.btn-secondary:hover{background:var(--bg5);color:var(--white);border-color:var(--gray3)}
+.btn-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.btn-danger:hover{background:rgba(239,68,68,.18)}
+.btn-ghost{background:transparent;color:var(--gray2);border:none}
+.btn-ghost:hover{color:var(--white);background:var(--bg4)}
+.btn-sm{padding:8px 14px;font-size:.8rem}
+.btn-full{width:100%}
+
+.alert{padding:10px 14px;border-radius:var(--r8);font-size:.82rem;margin-bottom:14px;display:flex;align-items:center;gap:8px;line-height:1.4}
+.alert-error{background:var(--red-dim);color:#fca5a5;border:1px solid rgba(239,68,68,.2)}
+.alert-success{background:var(--green-dim);color:#86efac;border:1px solid rgba(34,197,94,.2)}
+
+/* ── LOGO ── */
+.logo{display:flex;align-items:center;gap:9px}
+.logo-mark{width:34px;height:34px;background:var(--blue);border-radius:var(--r8);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 16px rgba(37,99,235,.4)}
+.logo-mark svg{width:20px;height:20px}
+.logo-name{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;color:var(--white);letter-spacing:-.02em}
+.logo-name span{color:var(--accent)}
+.logo-sm .logo-mark{width:28px;height:28px;border-radius:var(--r8)}
+.logo-sm .logo-mark svg{width:16px;height:16px}
+.logo-sm .logo-name{font-size:.9rem}
+
+/* ── APP ── */
+#app-screen{display:grid;grid-template-columns:240px 1fr;min-height:100vh;background:var(--black)}
+@media(max-width:900px){#app-screen{grid-template-columns:1fr}}
+
+/* ── SIDEBAR ── */
+#sidebar{background:var(--bg);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+@media(max-width:900px){#sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;z-index:200;transform:translateX(-100%);transition:transform .22s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow-lg)}#sidebar.open{transform:translateX(0)}}
+.sidebar-logo{padding:0 20px 24px;border-bottom:1px solid var(--border)}
+.nav{flex:1;padding:16px 10px}
+.nav-section{font-size:.65rem;font-weight:600;color:var(--gray3);letter-spacing:.1em;text-transform:uppercase;padding:0 10px;margin-bottom:6px;margin-top:20px}
+.nav-section:first-child{margin-top:0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:var(--r8);cursor:pointer;transition:all .12s;color:var(--gray2);font-size:.85rem;font-weight:500;border:none;background:transparent;width:100%;text-align:left;letter-spacing:.01em}
+.nav-item:hover{background:var(--bg3);color:var(--white)}
+.nav-item.active{background:var(--blue-subtle);color:var(--accent);border:1px solid rgba(37,99,235,.2)}
+.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.sidebar-footer{padding:16px 10px 0;border-top:1px solid var(--border)}
+
+/* ── TOPBAR ── */
+#topbar{display:none;background:var(--bg);border-bottom:1px solid var(--border);padding:12px 18px;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+@media(max-width:900px){#topbar{display:flex}}
+.topbar-btn{background:var(--bg3);border:1px solid var(--border2);color:var(--white);border-radius:var(--r8);padding:7px;cursor:pointer;display:flex;align-items:center}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:150;backdrop-filter:blur(3px)}
+.overlay.on{display:block}
+
+/* ── MAIN ── */
+#main{background:var(--bg);overflow-x:hidden}
+.page{padding:32px 32px 60px;max-width:860px}
+@media(max-width:640px){.page{padding:20px 14px 60px}}
+.page-title{font-family:'Space Grotesk',sans-serif;font-size:1.45rem;font-weight:700;margin-bottom:4px;color:var(--white)}
+.page-sub{font-size:.82rem;color:var(--gray2);margin-bottom:28px}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r16);padding:20px;box-shadow:var(--shadow-card)}
+.card+.card{margin-top:12px}
+.card-title{font-size:.7rem;font-weight:600;color:var(--gray2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px}
+
+/* ── BALANCE CARD ── */
+.balance-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r20);padding:28px;position:relative;overflow:hidden;box-shadow:var(--shadow-card)}
+.bal-glow{position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.18) 0%,transparent 65%);top:-120px;right:-80px;pointer-events:none}
+.bal-glow2{position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(96,165,250,.06) 0%,transparent 70%);bottom:-60px;left:-20px;pointer-events:none}
+.balance-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;position:relative;z-index:1}
+.balance-pill{background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r99);padding:4px 14px;font-size:.72rem;color:var(--gray2);display:flex;align-items:center;gap:5px}
+.bal-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;box-shadow:0 0 6px var(--green)}
+.balance-lbl{font-size:.72rem;font-weight:600;color:var(--gray2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;position:relative;z-index:1}
+.balance-amount{font-family:'Space Grotesk',sans-serif;font-size:clamp(2rem,5vw,2.6rem);font-weight:700;color:var(--white);position:relative;z-index:1;margin-bottom:6px;letter-spacing:-.03em}
+.balance-cur{font-size:1.1rem;font-weight:400;color:var(--gray);margin-right:3px}
+.balance-acc{font-size:.75rem;color:var(--gray2);position:relative;z-index:1}
+.balance-toggle{background:var(--bg4);border:1px solid var(--border2);color:var(--gray);border-radius:var(--r8);padding:6px 10px;font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:'Inter',sans-serif;transition:all .15s}
+.balance-toggle:hover{background:var(--bg5);color:var(--white)}
+
+/* ── QUICK ACTIONS ── */
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+@media(max-width:480px){.quick-grid{grid-template-columns:repeat(2,1fr)}}
+.quick-btn{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r12);padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:all .15s;color:var(--white);box-shadow:var(--shadow-card)}
+.quick-btn:hover{background:var(--bg3);border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.quick-ico{width:40px;height:40px;border-radius:var(--r8);display:flex;align-items:center;justify-content:center}
+.quick-ico.b{background:var(--blue-subtle);color:var(--accent)}
+.quick-ico.g{background:var(--green-dim);color:var(--green)}
+.quick-ico.r{background:var(--red-dim);color:var(--red)}
+.quick-ico.w{background:var(--bg4);color:var(--gray)}
+.quick-lbl{font-size:.72rem;font-weight:500;color:var(--gray2)}
+
+/* ── TX LIST ── */
+.tx-list{list-style:none}
+.tx-item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border)}
+.tx-item:last-child{border-bottom:none;padding-bottom:0}
+.tx-ico{width:38px;height:38px;border-radius:var(--r8);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tx-ico.in{background:var(--green-dim);color:var(--green)}
+.tx-ico.out{background:var(--red-dim);color:var(--red)}
+.tx-ico.tr{background:var(--blue-subtle);color:var(--accent)}
+.tx-info{flex:1;min-width:0}
+.tx-type{font-size:.85rem;font-weight:500;color:var(--white)}
+.tx-date{font-size:.72rem;color:var(--gray2);margin-top:1px}
+.tx-tid{font-size:.68rem;color:var(--gray3)}
+.tx-amt{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:.88rem;white-space:nowrap}
+.tx-amt.in{color:var(--green)}.tx-amt.out{color:var(--red)}.tx-amt.tr{color:var(--accent)}
+
+/* ── OP FORM ── */
+.op-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r16);padding:24px;max-width:460px;box-shadow:var(--shadow-card)}
+.op-title{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:10px;color:var(--white)}
+.op-ico{width:32px;height:32px;border-radius:var(--r8);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.op-ico.cyan{background:var(--blue-subtle);color:var(--accent)}
+.op-ico.red{background:var(--red-dim);color:var(--red)}
+.op-ico.blue{background:var(--blue-subtle);color:var(--accent)}
+
+/* ── EXTRATO ── */
+.ext-hdr{display:grid;grid-template-columns:1fr 155px 95px 115px;gap:10px;padding:10px 16px;font-size:.68rem;font-weight:600;color:var(--gray2);letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.ext-row{display:grid;grid-template-columns:1fr 155px 95px 115px;gap:10px;padding:12px 16px;align-items:center;font-size:.84rem;transition:background .12s;border-radius:var(--r8)}
+.ext-row:hover{background:var(--bg3)}
+@media(max-width:580px){.ext-hdr,.ext-row{grid-template-columns:1fr 105px}.ext-hdr .hc2,.ext-hdr .hc3,.ext-row .rc2,.ext-row .rc3{display:none}}
+
+/* ── PERFIL ── */
+.avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue-bright));display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:700;color:var(--white);flex-shrink:0;border:2px solid var(--border2)}
+.avatar-sm{width:32px;height:32px;font-size:.78rem}
+.info-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)}
+.info-row:last-child{border-bottom:none}
+.info-lbl{font-size:.75rem;color:var(--gray2)}
+.info-val{font-size:.88rem;font-weight:500;color:var(--white)}
+.badge-green{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:var(--r99);font-size:.68rem;font-weight:600;background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.15)}
+.badge-green::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green)}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r20);padding:28px;width:100%;max-width:400px;box-shadow:var(--shadow-lg)}
+.modal h3{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:6px;color:var(--white)}
+.modal-sub{font-size:.82rem;color:var(--gray2);margin-bottom:20px;line-height:1.5}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+
+/* ── SPINNER ── */
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--white);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:40px 20px;color:var(--gray2)}
+.empty p{font-size:.84rem;margin-top:10px}
+
+/* ── TOAST ── */
+@keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+#toast-container{position:fixed;bottom:20px;right:20px;z-index:500;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.toast{padding:11px 16px;border-radius:var(--r8);font-size:.8rem;font-weight:500;animation:slideUp .2s ease;max-width:300px;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow-lg)}
+.toast-s{background:#052e16;color:#86efac;border:1px solid rgba(34,197,94,.2)}
+.toast-e{background:#1c0a0a;color:#fca5a5;border:1px solid rgba(239,68,68,.2)}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:var(--border);margin:20px 0}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="logo" style="margin-bottom:12px">
+    <div class="logo-mark"><svg viewBox="0 0 22 22" fill="none"><path d="M4 18V4l5.5 7L4 18z" fill="white" fill-opacity=".95"/><path d="M18 4v14l-5.5-7L18 4z" fill="white" fill-opacity=".6"/><rect x="4" y="10" width="14" height="1.5" rx=".75" fill="white" fill-opacity=".4"/></svg></div>
+    <span class="logo-name">Nexus<span>Bank</span></span>
+  </div>
+  <div class="load-ring"></div>
+</div>
+
+<!-- AUTH -->
+<div id="auth-screen" class="hidden">
+  <div id="auth-hero">
+    <div class="hero-noise"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-z">
+      <div class="logo"><div class="logo-mark"><svg viewBox="0 0 22 22" fill="none"><path d="M4 18V4l5.5 7L4 18z" fill="white" fill-opacity=".95"/><path d="M18 4v14l-5.5-7L18 4z" fill="white" fill-opacity=".6"/><rect x="4" y="10" width="14" height="1.5" rx=".75" fill="white" fill-opacity=".4"/></svg></div><span class="logo-name">Nexus<span>Bank</span></span></div>
+    </div>
+    <div class="hero-z">
+      <h1 class="hero-h1">Seu banco.<br/><em>Totalmente digital.</em></h1>
+      <p class="hero-p">Gerencie seu dinheiro com segurança, agilidade e zero burocracia. Tudo no seu controle.</p>
+    </div>
+    <div class="hero-z hero-stats">
+      <div class="hero-stat"><div class="stat-val">100%</div><div class="stat-lbl">Digital</div></div>
+      <div class="hero-stat"><div class="stat-val">R$0</div><div class="stat-lbl">Tarifas</div></div>
+      <div class="hero-stat"><div class="stat-val">24h</div><div class="stat-lbl">Disponível</div></div>
+    </div>
+  </div>
+  <div id="auth-panel">
+    <div class="auth-card">
+      <p class="auth-greeting">Acesse sua conta <strong>NexusBank</strong></p>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Entrar</button>
+        <button class="auth-tab" id="tab-cadastro" onclick="switchTab('cadastro')">Criar conta</button>
+      </div>
+      <div id="auth-alert" class="alert alert-error hidden"></div>
+      <div id="form-login">
+        <div class="field"><label>Número da conta</label><input type="number" id="login-conta" placeholder="Ex: 1001" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+        <div class="field"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+        <button class="btn btn-primary" style="margin-top:6px" onclick="doLogin()"><span id="login-btn-txt">Entrar na conta</span></button>
+      </div>
+      <div id="form-cadastro" class="hidden">
+        <div class="field"><label>Nome completo</label><input type="text" id="cad-nome" placeholder="Ex: Maria Silva" onkeydown="if(event.key==='Enter')doCadastro()"/></div>
+        <div class="field"><label>Crie uma senha</label><input type="password" id="cad-senha" placeholder="Mínimo 4 caracteres" onkeydown="if(event.key==='Enter')doCadastro()"/></div>
+        <button class="btn btn-primary" style="margin-top:6px" onclick="doCadastro()"><span id="cad-btn-txt">Criar minha conta</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen" class="hidden">
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo"><div class="logo-mark"><svg viewBox="0 0 22 22" fill="none"><path d="M4 18V4l5.5 7L4 18z" fill="white" fill-opacity=".95"/><path d="M18 4v14l-5.5-7L18 4z" fill="white" fill-opacity=".6"/><rect x="4" y="10" width="14" height="1.5" rx=".75" fill="white" fill-opacity=".4"/></svg></div><span class="logo-name">Nexus<span>Bank</span></span></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Principal</div>
+      <button class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Início</button>
+      <button class="nav-item" id="nav-extrato" onclick="navigate('extrato')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Extrato</button>
+      <div class="nav-section">Operações</div>
+      <button class="nav-item" id="nav-deposito" onclick="navigate('deposito')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>Depósito</button>
+      <button class="nav-item" id="nav-saque" onclick="navigate('saque')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>Saque</button>
+      <button class="nav-item" id="nav-transferencia" onclick="navigate('transferencia')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Transferência</button>
+      <div class="nav-section">Conta</div>
+      <button class="nav-item" id="nav-perfil" onclick="navigate('perfil')"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Perfil</button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="nav-item" onclick="doLogout()"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sair da conta</button>
+    </div>
+  </aside>
+
+  <div id="main">
+    <div id="topbar">
+      <button class="topbar-btn" onclick="toggleSidebar()"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <div class="logo logo-sm"><div class="logo-mark"><svg viewBox="0 0 22 22" fill="none"><path d="M4 18V4l5.5 7L4 18z" fill="white" fill-opacity=".95"/><path d="M18 4v14l-5.5-7L18 4z" fill="white" fill-opacity=".6"/><rect x="4" y="10" width="14" height="1.5" rx=".75" fill="white" fill-opacity=".4"/></svg></div><span class="logo-name">Nexus<span>Bank</span></span></div>
+      <div class="avatar avatar-sm" id="topbar-avatar"></div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page hidden">
+      <p class="page-sub" style="margin-bottom:20px">Olá, <strong id="dash-nome" style="color:var(--white)"></strong> 👋</p>
+      <div class="balance-card">
+        <div class="bal-glow"></div><div class="bal-glow2"></div>
+        <div class="balance-hdr">
+          <div><div class="balance-lbl">Saldo disponível</div></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="balance-pill"><span class="bal-dot"></span>Ativo</div>
+            <button class="balance-toggle" onclick="toggleBalance()"><span id="bal-eye">👁</span><span id="bal-txt">Ocultar</span></button>
+          </div>
+        </div>
+        <div class="balance-amount"><span class="balance-cur">R$</span><span id="bal-value">—</span></div>
+        <div class="balance-acc" style="margin-top:8px">Conta <span id="bal-conta"></span> · NexusBank</div>
+      </div>
+
+      <div class="quick-grid" style="margin-top:16px">
+        <button class="quick-btn" onclick="navigate('deposito')">
+          <div class="quick-ico g"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
+          <span class="quick-lbl">Depósito</span>
+        </button>
+        <button class="quick-btn" onclick="navigate('saque')">
+          <div class="quick-ico r"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></div>
+          <span class="quick-lbl">Saque</span>
+        </button>
+        <button class="quick-btn" onclick="navigate('transferencia')">
+          <div class="quick-ico b"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+          <span class="quick-lbl">Transferir</span>
+        </button>
+        <button class="quick-btn" onclick="navigate('extrato')">
+          <div class="quick-ico w"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+          <span class="quick-lbl">Extrato</span>
+        </button>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">Últimas movimentações</div>
+        <ul class="tx-list" id="dash-tx-list"><li style="padding:20px 0;text-align:center"><div class="spinner"></div></li></ul>
+      </div>
+    </div>
+
+    <!-- DEPOSITO -->
+    <div id="page-deposito" class="page hidden">
+      <div class="page-title">Depósito</div>
+      <p class="page-sub">Adicione saldo à sua conta</p>
+      <div class="op-card">
+        <div class="op-title"><div class="op-ico cyan"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>Fazer depósito</div>
+        <div id="dep-alert" class="hidden"></div>
+        <div class="field"><label>Valor (R$)</label><input type="number" id="dep-valor" placeholder="0,00" step="0.01" min="0.01"/></div>
+        <div class="field"><label>Confirmar senha</label><input type="password" id="dep-senha" placeholder="••••••••"/></div>
+        <button class="btn btn-primary" onclick="doDeposito()"><span id="dep-btn-txt">Confirmar depósito</span></button>
+      </div>
+    </div>
+
+    <!-- SAQUE -->
+    <div id="page-saque" class="page hidden">
+      <div class="page-title">Saque</div>
+      <p class="page-sub">Retire valores da sua conta</p>
+      <div class="op-card">
+        <div class="op-title"><div class="op-ico red"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></div>Realizar saque</div>
+        <div id="saq-alert" class="hidden"></div>
+        <div class="field"><label>Valor (R$)</label><input type="number" id="saq-valor" placeholder="0,00" step="0.01" min="1"/></div>
+        <div class="field"><label>Confirmar senha</label><input type="password" id="saq-senha" placeholder="••••••••"/></div>
+        <button class="btn btn-primary" onclick="doSaque()"><span id="saq-btn-txt">Confirmar saque</span></button>
+      </div>
+    </div>
+
+    <!-- TRANSFERÊNCIA -->
+    <div id="page-transferencia" class="page hidden">
+      <div class="page-title">Transferência</div>
+      <p class="page-sub">Envie dinheiro para outra conta NexusBank</p>
+      <div class="op-card">
+        <div class="op-title"><div class="op-ico blue"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>Transferir</div>
+        <div id="trf-alert" class="hidden"></div>
+        <div class="field"><label>Conta de destino</label><input type="number" id="trf-destino" placeholder="Ex: 1002"/></div>
+        <div class="field"><label>Valor (R$)</label><input type="number" id="trf-valor" placeholder="0,00" step="0.01" min="0.01"/></div>
+        <div class="field"><label>Confirmar senha</label><input type="password" id="trf-senha" placeholder="••••••••"/></div>
+        <button class="btn btn-primary" onclick="doTransferencia()"><span id="trf-btn-txt">Confirmar transferência</span></button>
+      </div>
+    </div>
+
+    <!-- EXTRATO -->
+    <div id="page-extrato" class="page hidden">
+      <div class="page-title">Extrato</div>
+      <p class="page-sub">Histórico completo de movimentações</p>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="ext-hdr"><span>Tipo</span><span class="hc2">Data</span><span class="hc3">ID Transf.</span><span style="text-align:right">Valor</span></div>
+        <div id="ext-list"><div style="display:flex;justify-content:center;padding:40px"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- PERFIL -->
+    <div id="page-perfil" class="page hidden">
+      <div class="page-title">Perfil</div>
+      <p class="page-sub">Gerencie suas informações e configurações</p>
+      <div class="card" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div class="avatar" id="perfil-avatar"></div>
+        <div style="flex:1">
+          <div style="font-family:'Space Grotesk';font-size:1.05rem;font-weight:700" id="perfil-nome"></div>
+          <div style="font-size:.75rem;color:var(--gray2);margin-top:3px">Conta <span id="perfil-conta"></span></div>
+          <div style="margin-top:8px"><span class="badge-green">Conta ativa</span></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="card-title">Dados da conta</div>
+        <div class="info-row"><span class="info-lbl">Titular</span><span class="info-val" id="pi-nome"></span></div>
+        <div class="info-row"><span class="info-lbl">Número da conta</span><span class="info-val" id="pi-conta"></span></div>
+        <div class="info-row"><span class="info-lbl">Saldo atual</span><span class="info-val" id="pi-saldo" style="color:var(--green);font-family:'Space Grotesk';font-weight:700"></span></div>
+        <div class="info-row"><span class="info-lbl">Total de transações</span><span class="info-val" id="pi-tx"></span></div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="card-title">Ações</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+          <button class="btn btn-secondary" style="justify-content:flex-start;width:100%" onclick="openModal('nome')">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Alterar nome
+          </button>
+          <button class="btn btn-secondary" style="justify-content:flex-start;width:100%" onclick="openModal('senha')">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Alterar senha
+          </button>
+          <button class="btn btn-danger" style="justify-content:flex-start;width:100%" onclick="openModal('excluir')">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>Excluir conta
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div id="modal-nome" class="modal-bg hidden">
+  <div class="modal">
+    <h3>Alterar nome</h3>
+    <p class="modal-sub">Digite seu novo nome e confirme com sua senha.</p>
+    <div id="modal-nome-alert" class="hidden"></div>
+    <div class="field"><label>Novo nome</label><input type="text" id="mn-nome" placeholder="Nome completo"/></div>
+    <div class="field"><label>Senha atual</label><input type="password" id="mn-senha" placeholder="••••••••"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('nome')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="width:auto" onclick="doAlterarNome()"><span id="mn-btn-txt">Salvar</span></button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-senha" class="modal-bg hidden">
+  <div class="modal">
+    <h3>Alterar senha</h3>
+    <p class="modal-sub">Escolha uma nova senha para proteger sua conta.</p>
+    <div id="modal-senha-alert" class="hidden"></div>
+    <div class="field"><label>Senha atual</label><input type="password" id="ms-atual" placeholder="••••••••"/></div>
+    <div class="field"><label>Nova senha</label><input type="password" id="ms-nova" placeholder="••••••••"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('senha')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="width:auto" onclick="doAlterarSenha()"><span id="ms-btn-txt">Salvar</span></button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-excluir" class="modal-bg hidden">
+  <div class="modal">
+    <h3 style="color:var(--red)">Excluir conta</h3>
+    <p class="modal-sub">Esta ação é <strong style="color:var(--white)">irreversível</strong>. Todos os dados serão removidos permanentemente.</p>
+    <div id="modal-excluir-alert" class="hidden"></div>
+    <div class="field"><label>Confirme sua senha</label><input type="password" id="me-senha" placeholder="••••••••"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('excluir')">Cancelar</button>
+      <button class="btn btn-danger btn-sm" onclick="doExcluirConta()"><span id="me-btn-txt">Excluir conta</span></button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const API='http://localhost:8080/api';
+let SESSION=null,BALANCE_VISIBLE=true,LAST_SALDO=0;
+
+function $(id){return document.getElementById(id)}
+function show(id){$(id).classList.remove('hidden')}
+function hide(id){$(id).classList.add('hidden')}
+function fmt(v){return new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v)}
+function initials(n){return n.split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase()}
+function txCls(t){if(!t)return'tr';const l=t.toLowerCase();if(l.includes('dep')||l.includes('recebida'))return'in';if(l.includes('saque')||l.includes('enviada')||l.includes('alteração'))return'out';return'tr'}
+function txIcon(c){
+  if(c==='in')return`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>`;
+  if(c==='out')return`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>`;
+  return`<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+}
+
+async function api(path,opts={},token=null){
+  const h={'Content-Type':'application/json'};
+  if(token)h['Authorization']='Bearer '+token;
+  try{const r=await fetch(API+path,{headers:h,...opts});return r.json()}
+  catch{return{ok:false,erro:'Erro de conexão. Verifique se o servidor Java está rodando.'}}
+}
+
+function toast(msg,type='s'){
+  const el=document.createElement('div');
+  el.className=`toast toast-${type}`;
+  el.innerHTML=(type==='s'?'✓ ':'⚠ ')+msg;
+  $('toast-container').appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+
+function setAlert(id,msg,type='error'){
+  const el=$(id);
+  if(!msg){el.className='hidden';el.textContent='';return}
+  el.className=`alert alert-${type}`;
+  el.textContent=msg;
+}
+
+function switchTab(tab){
+  if(tab==='login'){
+    $('tab-login').classList.add('active');$('tab-cadastro').classList.remove('active');
+    show('form-login');hide('form-cadastro');
+  }else{
+    $('tab-cadastro').classList.add('active');$('tab-login').classList.remove('active');
+    show('form-cadastro');hide('form-login');
+  }
+  setAlert('auth-alert','');
+}
+
+async function doLogin(){
+  const conta=parseInt($('login-conta').value),senha=$('login-senha').value;
+  if(!conta||!senha){setAlert('auth-alert','Preencha todos os campos.');return}
+  $('login-btn-txt').innerHTML='<span class="spinner"></span>';
+  const r=await api('/login',{method:'POST',body:JSON.stringify({numeroConta:conta,senha})});
+  $('login-btn-txt').textContent='Entrar na conta';
+  if(!r.ok){setAlert('auth-alert',r.erro);return}
+  startApp(r.data);
+}
+
+async function doCadastro(){
+  const nome=$('cad-nome').value.trim(),senha=$('cad-senha').value;
+  if(!nome||!senha){setAlert('auth-alert','Preencha todos os campos.');return}
+  if(senha.length<4){setAlert('auth-alert','A senha deve ter pelo menos 4 caracteres.');return}
+  $('cad-btn-txt').innerHTML='<span class="spinner"></span>';
+  const r=await api('/cadastro',{method:'POST',body:JSON.stringify({nome,senha})});
+  $('cad-btn-txt').textContent='Criar minha conta';
+  if(!r.ok){setAlert('auth-alert',r.erro);return}
+  startApp(r.data);
+}
+
+function startApp(data){
+  SESSION=data;
+  hide('auth-screen');show('app-screen');
+  $('topbar-avatar').textContent=initials(SESSION.nome);
+  navigate('dashboard');
+}
+
+async function doLogout(){
+  await api('/logout',{method:'POST'},SESSION?.token).catch(()=>{});
+  SESSION=null;
+  hide('app-screen');show('auth-screen');
+  $('login-conta').value='';$('login-senha').value='';
+  setAlert('auth-alert','');switchTab('login');
+}
+
+function navigate(page){
+  ['dashboard','deposito','saque','transferencia','extrato','perfil'].forEach(p=>{
+    hide('page-'+p);$('nav-'+p)?.classList.remove('active');
+  });
+  show('page-'+page);$('nav-'+page)?.classList.add('active');
+  closeSidebar();
+  if(page==='dashboard')loadDashboard();
+  if(page==='extrato')loadExtrato();
+  if(page==='perfil')loadPerfil();
+}
+
+function toggleSidebar(){$('sidebar').classList.toggle('open');$('overlay').classList.toggle('on')}
+function closeSidebar(){$('sidebar').classList.remove('open');$('overlay').classList.remove('on')}
+
+async function loadDashboard(){
+  $('dash-nome').textContent=SESSION.nome.split(' ')[0];
+  $('bal-conta').textContent=SESSION.numeroConta;
+  const r=await api('/conta',{},SESSION.token);
+  if(r.ok){LAST_SALDO=r.data.saldo;$('bal-value').textContent=BALANCE_VISIBLE?fmt(LAST_SALDO):'••••••'}
+  const rx=await api('/extrato',{},SESSION.token);
+  const list=$('dash-tx-list');
+  if(!rx.ok||rx.data.length===0){list.innerHTML=`<li class="empty"><p>Nenhuma movimentação ainda</p></li>`;return}
+  list.innerHTML=rx.data.slice(0,5).map(t=>{
+    const c=txCls(t.tipo),p=c==='in'?'+':c==='out'?'-':'';
+    return`<li class="tx-item"><div class="tx-ico ${c}">${txIcon(c)}</div><div class="tx-info"><div class="tx-type">${t.tipo}</div><div class="tx-date">${t.data}</div>${t.idTransferencia?`<div class="tx-tid">ID ${t.idTransferencia}</div>`:''}</div><div class="tx-amt ${c}">${p}R$${fmt(t.valor)}</div></li>`;
+  }).join('');
+}
+
+function toggleBalance(){
+  BALANCE_VISIBLE=!BALANCE_VISIBLE;
+  $('bal-value').textContent=BALANCE_VISIBLE?fmt(LAST_SALDO):'••••••';
+  $('bal-txt').textContent=BALANCE_VISIBLE?'Ocultar':'Mostrar';
+  $('bal-eye').textContent=BALANCE_VISIBLE?'👁':'🙈';
+}
+
+async function doDeposito(){
+  const valor=parseFloat($('dep-valor').value),senha=$('dep-senha').value;
+  if(!valor||!senha){setAlert('dep-alert','Preencha todos os campos.');return}
+  $('dep-btn-txt').innerHTML='<span class="spinner"></span>';
+  const r=await api('/deposito',{method:'POST',body:JSON.stringify({valor,senha})},SESSION.token);
+  $('dep-btn-txt').textContent='Confirmar depósito';
+  if(!r.ok){setAlert('dep-alert',r.erro);return}
+  setAlert('dep-alert','');$('dep-valor').value='';$('dep-senha').value='';toast(r.data,'s');
+}
+
+async function doSaque(){
+  const valor=parseFloat($('saq-valor').value),senha=$('saq-senha').value;
+  if(!valor||!senha){setAlert('saq-alert','Preencha todos os campos.');return}
+  $('saq-btn-txt').innerHTML='<span class="spinner"></span>';
+  const r=await api('/saque',{method:'POST',body:JSON.stringify({valor,senha})},SESSION.token);
+  $('saq-btn-txt').textContent='Confirmar saque';
+  if(!r.ok){setAlert('saq-alert',r.erro);return}
+  setAlert('saq-alert','');$('saq-valor').value='';$('saq-senha').value='';toast(r.data,'s');
+}
+
+async function doTransferencia(){
+  const destino=parseInt($('trf-destino').value),valor=parseFloat($('trf-valor').value),senha=$('trf-senha').value;
+  if(!destino||!valor||!senha){setAlert('trf-alert','Preencha todos os campos.');return}
+  $('trf-btn-txt').innerHTML='<span class="spinner"></span>';
+  const r=await api('/transferencia',{method:'POST',body:JSON.stringify({numeroDestino:destino,valor,senha})},SESSION.token);
+  $('trf-btn-txt').textContent='Confirmar transferência';
+  if(!r.ok){setAlert('trf-alert',r.erro);return}
+  setAlert('trf-alert','');$('trf-destino').value='';$('trf-valor').value='';$('trf-senha').value='';toast(r.data,'s');
+}
+
+async function loadExtrato(){
+  const r=await api('/extrato',{},SESSION.token);
+  const list=$('ext-list');
+  if(!r.ok||r.data.length===0){list.innerHTML=`<div class="empty"><p>Nenhuma movimentação encontrada</p></div>`;return}
+  list.innerHTML=r.data.map(t=>{
+    const c=txCls(t.tipo),p=c==='in'?'+':c==='out'?'-':'';
+    return`<div class="ext-row"><div style="display:flex;align-items:center;gap:10px"><div class="tx-ico ${c}" style="width:32px;height:32px;border-radius:6px;flex-shrink:0">${txIcon(c)}</div><span style="color:var(--white)">${t.tipo}</span></div><span class="rc2" style="font-size:.75rem;color:var(--gray2)">${t.data}</span><span class="rc3" style="font-size:.75rem;color:var(--gray2)">${t.idTransferencia??'—'}</span><span class="tx-amt ${c}" style="text-align:right">${p}R$${fmt(t.valor)}</span></div>`;
+  }).join('');
+}
+
+async function loadPerfil(){
+  const r=await api('/conta',{},SESSION.token);
+  if(!r.ok)return;
+  const d=r.data;
+  $('perfil-avatar').textContent=initials(d.nome);
+  $('perfil-nome').textContent=d.nome;$('perfil-conta').textContent=SESSION.numeroConta;
+  $('pi-nome').textContent=d.nome;$('pi-conta').textContent=SESSION.numeroConta;
+  $('pi-saldo').textContent='R$'+fmt(d.saldo);$('pi-tx').textContent=d.quantidadeTransacoes;
+}
+
+function openModal(id){show('modal-'+id);setAlert('modal-'+id+'-alert','')}
+function closeModal(id){hide('modal-'+id)}
+
+async function doAlterarNome(){
+  const nome=$('mn-nome').value.trim(),senha=$('mn-senha').value;
+  if(!nome||!senha){setAlert('modal-nome-alert','Preencha todos os campos.');return}
+  $('mn-btn-txt').innerHTML='<span class="spinner"></span>';
+  const r=await api('/perfil/nome',{method:'PUT',body:JSON.stringify({novoNome:nome,senha})},SESSION.token);
+  $('mn-btn-txt').textContent='Salvar';
+  if(!r.ok){setAlert('modal-nome-alert',r.erro);return}
+  closeModal('nome');SESSION.nome=nome;$('topbar-avatar').textContent=initials(nome);loadPerfil();toast(r.data,'s');
+}
+
+async function doAlterarSenha(){
+  const senhaAtual=$('ms-atual').value,novaSenha=$('ms-nova').value;
+  if(!senhaAtual||!novaSenha){setAlert('modal-senha-alert','Preencha todos os campos.');return}
+  $('ms-btn-txt').innerHTML='<span class="spinner"></span>';
+  const r=await api('/perfil/senha',{method:'PUT',body:JSON.stringify({senhaAtual,novaSenha})},SESSION.token);
+  $('ms-btn-txt').textContent='Salvar';
+  if(!r.ok){setAlert('modal-senha-alert',r.erro);return}
+  closeModal('senha');$('ms-atual').value='';$('ms-nova').value='';toast(r.data,'s');
+}
+
+async function doExcluirConta(){
+  const senha=$('me-senha').value;
+  if(!senha){setAlert('modal-excluir-alert','Digite sua senha.');return}
+  $('me-btn-txt').innerHTML='<span class="spinner"></span>';
+  const r=await api('/conta',{method:'DELETE',body:JSON.stringify({senha})},SESSION.token);
+  $('me-btn-txt').textContent='Excluir conta';
+  if(!r.ok){setAlert('modal-excluir-alert',r.erro);return}
+  closeModal('excluir');toast('Conta excluída.','s');setTimeout(()=>doLogout(),1000);
+}
+
+window.addEventListener('load',()=>{
+  setTimeout(()=>{hide('loading-screen');show('auth-screen');},600);
+});
+</script>
+</body>
+</html>
