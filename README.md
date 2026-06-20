@@ -160,8 +160,8 @@ CREATE TABLE transacoes (
 
 Desenvolvido por **Bruno da Silva Chagas**
 
-[![GitHub](https://img.shields.io/badge/GitHub-seu--usuario-black?style=flat-square&logo=github)](https://github.com/seu-usuario)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-seu--perfil-blue?style=flat-square&logo=linkedin)](https://linkedin.com/in/seu-perfil)
+[![GitHub](https://github.com/BrunoSlvCh)
+[![LinkedIn](https://www.linkedin.com/in/bruno-da-silva-chagas-5ab7bb377/)
 
 ---
 
