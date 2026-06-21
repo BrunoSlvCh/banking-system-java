@@ -32,27 +32,28 @@
 
     ## 📸 Screenshots
 
+## 📸 Screenshots
+
 ### Login
-![Login](C:\Users\Bruno\Downloads\LoginBank.png)
+![Login](screenshots/LoginBank.png)
 
 ### Dashboard
-![Dashboard](C:\Users\Bruno\Downloads\TelaInicial.png)
+![Dashboard](screenshots/TelaInicial.png)
 
-### Info-Conta
-![Dashboard](C:\Users\Bruno\Downloads\InfoContas.png)
+### Informações da Conta
+![InfoContas](screenshots/InfoContas.png)
 
 ### Extrato
-![Extrato](C:\Users\Bruno\Downloads\Extrato.png)
+![Extrato](screenshots/Extrato.png)
 
 ### Saque
-![Extrato](C:\Users\Bruno\Downloads\Saque.png)
+![Saque](screenshots/Saque.png)
 
 ### Depósito
-![Extrato](C:\Users\Bruno\Downloads\Deposito.png)
+![Deposito](screenshots/Deposito.png)
 
 ### Transferências
-![Extrato](C:\Users\Bruno\Downloads\Transferencia.png)
-
+![Transferencia](screenshots/Transferencia.png)
     ---
 
     ## Tecnologias utilizadas
